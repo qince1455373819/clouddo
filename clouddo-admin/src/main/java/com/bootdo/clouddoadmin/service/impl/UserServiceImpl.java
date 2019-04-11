@@ -1,25 +1,25 @@
 package com.bootdo.clouddoadmin.service.impl;
 
 
-import com.bootdo.clouddoadmin.domain.Tree;
-
-import com.bootdo.clouddoadmin.utils.*;
 import com.bootdo.clouddoadmin.dao.DeptDao;
 import com.bootdo.clouddoadmin.dao.UserDao;
 import com.bootdo.clouddoadmin.dao.UserRoleDao;
 import com.bootdo.clouddoadmin.domain.DeptDO;
+import com.bootdo.clouddoadmin.domain.Tree;
 import com.bootdo.clouddoadmin.domain.UserDO;
 import com.bootdo.clouddoadmin.domain.UserRoleDO;
 import com.bootdo.clouddoadmin.service.UserService;
+import com.bootdo.clouddoadmin.utils.BuildTree;
+import com.bootdo.clouddoadmin.utils.MD5Utils;
 import com.bootdo.clouddoadmin.vo.UserVO;
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 
 import java.util.*;
 
@@ -114,11 +114,23 @@ public class UserServiceImpl implements UserService {
 		return null;
 	}
 
+    /**
+     * 采用org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder 的加密方式
+     * @param userVO
+     * @param map
+     * @return
+     * @throws Exception
+     * 改动于 2019-04
+     */
 	@Override
-	public int resetPwd(UserVO userVO,UserDO userDO) throws Exception {
-		if(Objects.equals(userVO.getUserDO().getUserId(),userDO.getUserId())){
-			if(Objects.equals(MD5Utils.encrypt(userDO.getUsername(),userVO.getPwdOld()),userDO.getPassword())){
-				userDO.setPassword(MD5Utils.encrypt(userDO.getUsername(),userVO.getPwdNew()));
+	public int resetPwd(UserVO userVO,Map<String,Object> map) throws Exception {
+        List<UserDO> list= this.list(map);
+        if(list.size() >0 ){
+            UserDO userDO = list.get(0);
+            BCryptPasswordEncoder encoder =new BCryptPasswordEncoder();
+			if(encoder.matches(userVO.getPwdOld(), userDO.getPassword())){
+				userDO.setPassword(encoder.encode(userVO.getPwdNew()));
+//				userDO.setPassword(MD5Utils.encrypt(userDO.getUsername(),userVO.getPwdNew()));
 				return userMapper.update(userDO);
 			}else{
 				throw new Exception("输入的旧密码有误！");
