@@ -2,26 +2,20 @@ package com.bootdo.clouddoadmin.controller;
 
 import com.bootdo.clouddoadmin.domain.UserDO;
 import com.bootdo.clouddoadmin.dto.UserDTO;
-import com.bootdo.clouddoadmin.dto.UserRoleDTO;
 import com.bootdo.clouddoadmin.dto.do2dto.UserConvert;
 import com.bootdo.clouddoadmin.service.RoleService;
 import com.bootdo.clouddoadmin.service.UserService;
 import com.bootdo.clouddoadmin.utils.MD5Utils;
 import com.bootdo.clouddoadmin.utils.SecuityUtils;
+import com.bootdo.clouddoadmin.vo.UserVO;
 import com.bootdo.clouddocommon.annotation.Log;
 import com.bootdo.clouddocommon.context.FilterContextHandler;
 import com.bootdo.clouddocommon.dto.LoginUserDTO;
 import com.bootdo.clouddocommon.utils.PageUtils;
 import com.bootdo.clouddocommon.utils.Query;
 import com.bootdo.clouddocommon.utils.R;
-import org.apache.catalina.servlet4preview.http.HttpServletRequest;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -131,5 +125,18 @@ public class UserController extends BaseController {
 	@GetMapping("/tokenUser")
 	public Principal user(Principal user){
 		return user;
+	}
+
+	@PutMapping("resetPwd")
+	public R resetPwd(@RequestBody UserVO userVo, Principal principal){
+		try{
+			String username = principal.getName();
+			Map<String,Object> map = new HashMap<>();
+			map.put("username",username);
+			userService.resetPwd(userVo,map);
+			return R.ok();
+		}catch (Exception e){
+			return R.error(1,e.getMessage());
+		}
 	}
 }
